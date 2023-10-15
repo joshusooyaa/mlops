@@ -122,3 +122,83 @@ class CustomMappingTransformer(BaseEstimator, TransformerMixin):
     #self.fit(X,y)
     result = self.transform(X)
     return result
+
+
+class CustomTukeyTransformer(BaseEstimator, TransformerMixin):
+  def __init__(self, target_column, fence='outer'):
+    assert fence in ['inner', 'outer']
+    self.target_column = target_column
+    self.fence = fence
+    self.low = None
+    self.high = None
+
+  def fit(self, df, y = None):
+    assert self.target_column in df, f'{self.target_column} is not a column in the DataFrame'
+    """
+    iqr = q3-q1  #inter-quartile range, where q1 is 25% and q3 is 75%
+    inner_low = q1-1.5*iqr
+    inner_high = q3+1.5*iqr
+    For the outer fences:
+
+    iqr = q3-q1  #inter-quartile range, where q1 is 25% and q3 is 75%
+    outer_low = q1-3*iqr  #factor of 2 larger
+    outer_high = q3+3*iqr
+    """
+    q3 = df[self.target_column].quantile(0.75)
+    q1 = df[self.target_column].quantile(0.25)
+    iqr = q3 - q1
+
+    print(self.fence == 'inner')
+    if self.fence == 'inner':
+      self.low = q1 - 1.5 * iqr
+      self.high = q3 + 1.5 * iqr
+    else:
+      self.low = q1 - 3 * iqr
+      self.high = q3 + 3 * iqr
+
+    return self
+
+
+  def transform(self, df):
+    assert self.low is not None or self.high is not None, f'NotFittedError: This {self.__class__.__name__} instance is not fitted yet. Call "fit" with appropriate arguments before using this estimator.'
+
+    df_ = df.copy()
+    df_[self.target_column] = df_[self.target_column].clip(lower=self.low, upper=self.high)
+    return df_
+
+
+  def fit_transform(self, df, y = None):
+    self.fit(df, y)
+    result = self.transform(df)
+    return result
+
+
+class CustomSigma3Transformer(BaseEstimator, TransformerMixin):
+  def __init__(self, target_column):
+    self.target_column = target_column
+    self.minb = None
+    self.maxb = None
+
+  def fit(self, df, y = None):
+    assert self.target_column in df, f'{self.target_column} is not a column in the DataFrame'
+
+    mean = df[self.target_column].mean()
+    sigma = df[self.target_column].std()
+
+    self.maxb = mean + 3 * sigma
+    self.minb = mean - 3 * sigma
+
+    return self
+
+  def transform(self, df):
+    assert self.minb is not None or self.maxb is not None, f'NotFittedError: This {self.__class__.__name__} instance is not fitted yet. Call "fit" with appropriate arguments before using this estimator.'
+
+    df_ = df.copy()
+    df_[self.target_column] = df_[self.target_column].clip(lower=self.minb, upper=self.maxb)
+    return df_
+
+  def fit_transform(self, df, y = None):
+    self.fit(df, y)
+    result = self.transform(df)
+    return result
+
