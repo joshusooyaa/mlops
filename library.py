@@ -262,3 +262,6 @@ def find_random_state(features_df, labels, n=200):
   rs = np.array(abs(var - rs_value)).argmin()  #find the index of the smallest value
   return rs
 
+
+titanic_variance_based_split = 107
+customer_variance_based_split = 113
