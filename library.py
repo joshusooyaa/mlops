@@ -11,6 +11,7 @@ subprocess.call([sys.executable, '-m', 'pip', 'install', 'category_encoders'])  
 import category_encoders as ce
 from sklearn.neighbors import KNeighborsClassifier  
 from sklearn.metrics import f1_score  
+from sklearn.model_selection import train_test_split
 
 
 class CustomOHETransformer(BaseEstimator, TransformerMixin):
