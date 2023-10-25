@@ -156,7 +156,6 @@ class CustomTukeyTransformer(BaseEstimator, TransformerMixin):
     q1 = df[self.target_column].quantile(0.25)
     iqr = q3 - q1
 
-    print(self.fence == 'inner')
     if self.fence == 'inner':
       self.low = q1 - 1.5 * iqr
       self.high = q3 + 1.5 * iqr
